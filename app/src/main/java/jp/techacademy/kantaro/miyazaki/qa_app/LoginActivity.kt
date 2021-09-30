@@ -12,6 +12,7 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_login.*
+import android.util.Log
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var mAuth: FirebaseAuth
@@ -58,6 +59,8 @@ class LoginActivity : AppCompatActivity() {
                 val user = mAuth.currentUser
                 val userRef = mDataBaseReference.child(UsersPATH).child(user!!.uid)
 
+                //Log.d("check", userRef.toString()) //jKR0zuvepgb9HZPrVbpPIh8dNzH3
+
                 if (mIsCreateAccount) {
                     // アカウント作成の時は表示名をFirebaseに保存する
                     val name = nameText.text.toString()
@@ -69,6 +72,7 @@ class LoginActivity : AppCompatActivity() {
                     // 表示名をPreferenceに保存する
                     saveName(name)
                 } else {
+
                     userRef.addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
                             val data = snapshot.value as Map<*, *>?
