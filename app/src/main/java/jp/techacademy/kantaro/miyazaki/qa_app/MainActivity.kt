@@ -8,7 +8,6 @@ import android.view.MenuItem
 import com.google.firebase.auth.FirebaseAuth  // ← 追加
 // findViewById()を呼び出さずに該当Viewを取得するために必要となるインポート宣言
 import kotlinx.android.synthetic.main.activity_main.*  // ← 追加
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
