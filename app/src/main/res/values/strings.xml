@@ -20,4 +20,11 @@
     <string name="create_account_failure_message">アカウント作成に失敗しました</string>
     <string name="login_failure_message">ログインに失敗しました</string>
     <string name="login_error_message">正しく入力してください</string>
+
+    <!-- ドロワー・メニュー用文字列 -->
+    <string name="genre_select_label">ジャンル選択</string>
+    <string name="menu_hobby_label">趣味</string>
+    <string name="menu_life_label">生活</string>
+    <string name="menu_health_label">健康</string>
+    <string name="menu_compter_label">コンピューター</string>
 </resources>
