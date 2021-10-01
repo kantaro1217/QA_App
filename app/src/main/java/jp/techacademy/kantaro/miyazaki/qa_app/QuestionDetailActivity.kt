@@ -6,6 +6,7 @@ import android.os.Bundle
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_question_detail.*
+import android.util.Log
 
 class QuestionDetailActivity : AppCompatActivity() {
 
@@ -31,6 +32,8 @@ class QuestionDetailActivity : AppCompatActivity() {
             val uid = map["uid"] as? String ?: ""
 
             val answer = Answer(body, name, uid, answerUid)
+            Log.d("check" ,answer.uid)
+            Log.d("check" ,answer.answerUid)
             mQuestion.answers.add(answer)
             mAdapter.notifyDataSetChanged()
         }
@@ -59,6 +62,8 @@ class QuestionDetailActivity : AppCompatActivity() {
         // 渡ってきたQuestionのオブジェクトを保持する
         val extras = intent.extras
         mQuestion = extras!!.get("question") as Question
+        Log.d("check" ,mQuestion.uid)
+        Log.d("check" ,mQuestion.questionUid)
 
         title = mQuestion.title
 

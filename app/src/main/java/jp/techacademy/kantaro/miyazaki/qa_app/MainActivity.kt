@@ -8,6 +8,7 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.view.GravityCompat
+import androidx.core.view.isVisible
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
@@ -108,6 +109,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // id名でActionBarのサポートを依頼
         setSupportActionBar(toolbar)
 
+        // ログイン済みのユーザーを取得する
+        val user = FirebaseAuth.getInstance().currentUser
+
+
         // fabにClickリスナーを登録
         fab.setOnClickListener { view ->
             // ジャンルを選択していない場合（mGenre == 0）はエラーを表示するだけ
@@ -116,8 +121,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             } else {
 
             }
-            // ログイン済みのユーザーを取得する
-            val user = FirebaseAuth.getInstance().currentUser
 
             if (user == null) {
                 // ログインしていなければログイン画面に遷移させる
@@ -196,6 +199,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else if (id == R.id.nav_compter) {
             toolbar.title = getString(R.string.menu_compter_label)
             mGenre = 4
+        }
+        //追加分
+        else if (id == R.id.nav_favorite) {
+            toolbar.title = "お気に入り一覧"
+            mGenre = 5
         }
 
         drawer_layout.closeDrawer(GravityCompat.START)

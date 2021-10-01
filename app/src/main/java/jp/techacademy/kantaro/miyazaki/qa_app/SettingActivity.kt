@@ -9,6 +9,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.android.synthetic.main.activity_setting.*
+import android.util.Log
 
 class SettingActivity : AppCompatActivity() {
 
@@ -21,6 +22,7 @@ class SettingActivity : AppCompatActivity() {
         // Preferenceから表示名を取得してEditTextに反映させる
         val sp = PreferenceManager.getDefaultSharedPreferences(this)
         val name = sp.getString(NameKEY, "")
+        Log.d("check", name.toString())
         nameText.setText(name)
 
         mDataBaseReference = FirebaseDatabase.getInstance().reference
@@ -63,4 +65,5 @@ class SettingActivity : AppCompatActivity() {
             Snackbar.make(v, getString(R.string.logout_complete_message), Snackbar.LENGTH_LONG).show()
         }
     }
+
 }
