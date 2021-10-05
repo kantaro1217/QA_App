@@ -22,7 +22,7 @@ class SettingActivity : AppCompatActivity() {
         // Preferenceから表示名を取得してEditTextに反映させる
         val sp = PreferenceManager.getDefaultSharedPreferences(this)
         val name = sp.getString(NameKEY, "")
-        Log.d("check", name.toString())
+        //Log.d("check", name.toString())
         nameText.setText(name)
 
         mDataBaseReference = FirebaseDatabase.getInstance().reference

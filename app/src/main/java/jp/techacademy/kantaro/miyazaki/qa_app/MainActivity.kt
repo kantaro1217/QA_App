@@ -9,6 +9,7 @@ import android.view.MenuItem
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
+import android.util.Log
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
@@ -102,6 +103,85 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
     // --- ここまで追加する ---
 
+    private val mFavoriteEventListener = object : ChildEventListener {
+        override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
+            val map = dataSnapshot.value as Map<String, String>
+
+            val favoriteRef = mDatabaseReference.child(ContentsPATH).child(map["genre"].toString()).child(dataSnapshot.key.toString())
+            favoriteRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val map = snapshot.value as Map<String, String>
+                    val title = map["title"] ?: ""
+                    val body = map["body"] ?: ""
+                    val name = map["name"] ?: ""
+                    val uid = map["uid"] ?: ""
+                    val imageString = map["image"] ?: ""
+                    val bytes =
+                        if (imageString.isNotEmpty()) {
+                            Base64.decode(imageString, Base64.DEFAULT)
+                        } else {
+                            byteArrayOf()
+                        }
+                    val answerArrayList = ArrayList<Answer>()
+                    val answerMap = map["answers"] as Map<String, String>?
+                    if (answerMap != null) {
+                        for (key in answerMap.keys) {
+                            val temp = answerMap[key] as Map<String, String>
+                            val answerBody = temp["body"] ?: ""
+                            val answerName = temp["name"] ?: ""
+                            val answerUid = temp["uid"] ?: ""
+                            val answer = Answer(answerBody, answerName, answerUid, key)
+                            answerArrayList.add(answer)
+                        }
+                    }
+                    val question = Question(title, body, name, uid, dataSnapshot.key ?: "",
+                        mGenre, bytes, answerArrayList)
+                    mQuestionArrayList.add(question)
+                    mAdapter.notifyDataSetChanged()
+                }
+
+                override fun onCancelled(firebaseError: DatabaseError) {}
+            })
+        }
+
+        override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
+            val map = dataSnapshot.value as Map<String, String>
+
+            // 変更があったQuestionを探す
+            for (question in mQuestionArrayList) {
+                if (dataSnapshot.key.equals(question.questionUid)) {
+                    // このアプリで変更がある可能性があるのは回答（Answer)のみ
+                    question.answers.clear()
+                    val answerMap = map["answers"] as Map<String, String>?
+                    if (answerMap != null) {
+                        for (key in answerMap.keys) {
+                            val temp = answerMap[key] as Map<String, String>
+                            val answerBody = temp["body"] ?: ""
+                            val answerName = temp["name"] ?: ""
+                            val answerUid = temp["uid"] ?: ""
+                            val answer = Answer(answerBody, answerName, answerUid, key)
+                            question.answers.add(answer)
+                        }
+                    }
+
+                    mAdapter.notifyDataSetChanged()
+                }
+            }
+        }
+
+        override fun onChildRemoved(p0: DataSnapshot) {
+
+        }
+
+        override fun onChildMoved(p0: DataSnapshot, p1: String?) {
+
+        }
+
+        override fun onCancelled(p0: DatabaseError) {
+
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -163,8 +243,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if(mGenre == 0) {
             onNavigationItemSelected(nav_view.menu.getItem(0))
         }
+        //ここでログインの有無でmenuItemを表示非表示するか
+        val user = FirebaseAuth.getInstance().currentUser
+        nav_view.menu.getItem(4).isVisible = user != null
+
     }
     // --- ここまで追加する ---
+
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu this adds items to the action bar if it is present.
@@ -218,8 +304,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (mGenreRef != null) {
             mGenreRef!!.removeEventListener(mEventListener)
         }
-        mGenreRef = mDatabaseReference.child(ContentsPATH).child(mGenre.toString())
-        mGenreRef!!.addChildEventListener(mEventListener)
+        if(mGenre != 5){
+            mGenreRef = mDatabaseReference.child(ContentsPATH).child(mGenre.toString())
+            mGenreRef!!.addChildEventListener(mEventListener)
+        }
+        else{
+            val user = FirebaseAuth.getInstance().currentUser
+            if (user != null) {
+                mGenreRef = mDatabaseReference.child(FavoritePATH).child(user.uid)
+                mGenreRef!!.addChildEventListener(mFavoriteEventListener)
+            }
+        }
+
 
         return true
         // --- ここまで追加する ---

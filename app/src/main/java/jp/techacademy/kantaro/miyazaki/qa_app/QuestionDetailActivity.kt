@@ -132,8 +132,6 @@ class QuestionDetailActivity : AppCompatActivity() {
             star.hide()
         }
         else{
-            // お気に入りされていなかったら中抜き星
-            if(isFavorite) star.setImageResource(R.drawable.ic_star) else star.setImageResource(R.drawable.ic_star_border)
             // お気に入りボタンの機能実装
             star.setOnClickListener {
                 if(isFavorite){
