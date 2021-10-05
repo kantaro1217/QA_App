@@ -7,12 +7,16 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_question_detail.*
 import android.util.Log
+import android.view.ActionMode
 
 class QuestionDetailActivity : AppCompatActivity() {
 
     private lateinit var mQuestion: Question
     private lateinit var mAdapter: QuestionDetailListAdapter
     private lateinit var mAnswerRef: DatabaseReference
+    private lateinit var mFavoriteRef: DatabaseReference
+    private var isFavorite: Boolean = false
+    private var qUidKey: String= ""
 
     private val mEventListener = object : ChildEventListener {
         override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
@@ -32,8 +36,6 @@ class QuestionDetailActivity : AppCompatActivity() {
             val uid = map["uid"] as? String ?: ""
 
             val answer = Answer(body, name, uid, answerUid)
-            Log.d("check" ,answer.uid)
-            Log.d("check" ,answer.answerUid)
             mQuestion.answers.add(answer)
             mAdapter.notifyDataSetChanged()
         }
@@ -55,15 +57,87 @@ class QuestionDetailActivity : AppCompatActivity() {
         }
     }
 
+    private val fEvantListener = object : ChildEventListener{
+        override fun onChildAdded(dataSnapshot: DataSnapshot, previousChildName: String?) {
+//            for (child in dataSnapshot.children){
+//                Log.d("check", child.value.toString())
+//            }
+            qUidKey = dataSnapshot.key.toString()
+            if(mQuestion.questionUid.equals(dataSnapshot.value.toString())) {
+                Log.d("check" , mQuestion.questionUid.equals(dataSnapshot.value.toString()).toString())
+                isFavorite = true
+            }
+            Log.d("check", dataSnapshot.value.toString())
+
+            //お気に入りボタンの設定
+            val user = FirebaseAuth.getInstance().currentUser
+            val uid = FirebaseAuth.getInstance().uid
+
+            if (user == null) {
+                star.hide()
+            }
+            else{
+                // お気に入りされていなかったら中抜き星
+                if(isFavorite) star.setImageResource(R.drawable.ic_star) else star.setImageResource(R.drawable.ic_star_border)
+                // お気に入りボタンの機能実装
+                star.setOnClickListener {
+                    if(isFavorite){
+                        onDeleteFavorite(uid.toString(), mQuestion.questionUid)
+                        star.setImageResource(R.drawable.ic_star_border)
+                        isFavorite = false
+                    }
+                    else{
+                        onAddFavorite(uid.toString(), mQuestion.questionUid)
+                        star.setImageResource(R.drawable.ic_star)
+                    }
+                }
+            }
+
+        }
+        override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+            TODO("Not yet implemented")
+        }
+        override fun onChildRemoved(snapshot: DataSnapshot) {
+            Log.d("check", "onChiledRemoved done")
+            //お気に入りボタンの設定
+            val user = FirebaseAuth.getInstance().currentUser
+            val uid = FirebaseAuth.getInstance().uid
+
+            if (user == null) {
+                star.hide()
+            }
+            else{
+                // お気に入りされていなかったら中抜き星
+                if(isFavorite) star.setImageResource(R.drawable.ic_star) else star.setImageResource(R.drawable.ic_star_border)
+                // お気に入りボタンの機能実装
+                star.setOnClickListener {
+                    if(isFavorite){
+                        onDeleteFavorite(uid.toString(), mQuestion.questionUid)
+                        star.setImageResource(R.drawable.ic_star_border)
+                    }
+                    else{
+                        onAddFavorite(uid.toString(), mQuestion.questionUid)
+                        star.setImageResource(R.drawable.ic_star)
+                    }
+                }
+            }
+        }
+        override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+            TODO("Not yet implemented")
+        }
+        override fun onCancelled(error: DatabaseError) {
+            TODO("Not yet implemented")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_question_detail)
+        Log.d("check" , "onCreate")
 
         // 渡ってきたQuestionのオブジェクトを保持する
         val extras = intent.extras
         mQuestion = extras!!.get("question") as Question
-        Log.d("check" ,mQuestion.uid)
-        Log.d("check" ,mQuestion.questionUid)
 
         title = mQuestion.title
 
@@ -93,5 +167,65 @@ class QuestionDetailActivity : AppCompatActivity() {
         val dataBaseReference = FirebaseDatabase.getInstance().reference
         mAnswerRef = dataBaseReference.child(ContentsPATH).child(mQuestion.genre.toString()).child(mQuestion.questionUid).child(AnswersPATH)
         mAnswerRef.addChildEventListener(mEventListener)
+
+        //お気に入りボタンの設定
+        val user = FirebaseAuth.getInstance().currentUser
+        val uid = FirebaseAuth.getInstance().uid
+
+        //お気に入り取得
+        mFavoriteRef = dataBaseReference.child(FavoritePATH).child(uid.toString())
+        mFavoriteRef.addChildEventListener(fEvantListener)
+        Log.d("check", isFavorite.toString())
+
+
+        //Log.d("check" , user.toString())
+        //Log.d("check", uid.toString())
+        if (user == null) {
+            star.hide()
+        }
+        else{
+            // お気に入りされていなかったら中抜き星
+            if(isFavorite) star.setImageResource(R.drawable.ic_star) else star.setImageResource(R.drawable.ic_star_border)
+            // お気に入りボタンの機能実装
+            star.setOnClickListener {
+                if(isFavorite){
+                    onDeleteFavorite(uid.toString(), mQuestion.questionUid)
+                    star.setImageResource(R.drawable.ic_star_border)
+                }
+                else{
+                    onAddFavorite(uid.toString(), mQuestion.questionUid)
+                    star.setImageResource(R.drawable.ic_star)
+                }
+            }
+        }
+
+
     }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d("check", "onResume")
+    }
+
+    private fun getIsFavorite(uid: String , mQuestion: Question) :Boolean {
+        val dataBaseReference = FirebaseDatabase.getInstance().reference
+        mFavoriteRef = dataBaseReference.child(FavoritePATH).child(uid)
+        //Log.d("check" , mFavoriteRef.key)
+        return false
+    }
+
+    private fun onAddFavorite(uid: String, qUid: String){
+        Log.d("check", "onAdd done")
+        val dataBaseReference = FirebaseDatabase.getInstance().reference
+        val FavRef = dataBaseReference.child(FavoritePATH).child(uid)
+        FavRef.push().setValue(qUid)
+    }
+
+    private fun onDeleteFavorite(uid: String, qUid: String){
+        Log.d("check", "onDelete done")
+        val dataBaseReference = FirebaseDatabase.getInstance().reference
+        val FavRef = dataBaseReference.child(FavoritePATH).child(uid).child(qUidKey)
+        FavRef.removeValue()
+    }
+
 }
